@@ -1,0 +1,26 @@
+[Unit]
+Description=Notify within docker
+Requires=docker.service
+After=docker.service
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=notify
+
+#TimeoutStartSec=20s
+TimeoutStartSec=1w
+
+Environment=NOTIFY_SOCKET=/run/systemd/notify
+NotifyAccess=all  # Allow subprocesses to notify
+
+# Otherwise we just get docker/podman
+SyslogIdentifier=notify-test
+
+ExecStart=/usr/bin/docker run --name="notify-test" --rm \
+  -v /run/systemd/notify:/run/systemd/notify:ro \
+  -v /usr/bin/systemd-notify:/usr/bin/systemd-notify:ro \
+  -e "NOTIFY_SOCKET" \
+  notify-test
+ExecStop=/usr/bin/docker stop notify-test
